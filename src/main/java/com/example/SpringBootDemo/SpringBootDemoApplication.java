@@ -13,22 +13,19 @@ import org.springframework.context.annotation.Bean;
 import java.math.BigDecimal;
 
 @SpringBootApplication
-@EnableAutoConfiguration
 public class SpringBootDemoApplication {
-
     @Autowired
     StudentService studentService;
-//StudentsRecords.csv
-    String fileName = "StudentsRecords.csv";
+    final String fileName = "StudentsRecords.csv";
 
     public static void main(String[] args) {
         SpringApplication.run(SpringBootDemoApplication.class, args);
     }
+
     @Bean
-    CommandLineRunner initDatabase(StudentRepository repository) {
+    CommandLineRunner initDatabase() {
         return args -> {
             studentService.loadInitialDataFromFile(fileName);
         };
     }
-
 }

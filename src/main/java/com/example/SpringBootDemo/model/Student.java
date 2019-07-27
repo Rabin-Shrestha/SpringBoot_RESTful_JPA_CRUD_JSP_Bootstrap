@@ -24,7 +24,7 @@ public class Student implements Serializable {
     private Integer gradeLevel = null;
 
     @Column(name = "name")
-    private String name;
+    private String name=null;
 
     public Student() {
     }

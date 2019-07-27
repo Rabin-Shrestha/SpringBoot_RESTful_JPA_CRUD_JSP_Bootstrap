@@ -6,5 +6,4 @@ import java.util.List;
 
 public interface IService {
     List<Student> findAll();
-    List<Student> search();
 }

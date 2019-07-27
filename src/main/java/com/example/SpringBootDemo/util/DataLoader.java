@@ -35,13 +35,9 @@ public class DataLoader {
                 // Break line into entries using comma
                 String[] items = line.split(",");
                 try {
-                    // If there are too many entries, throw a dummy exception, if
-                    // there are too few, the same exception will be thrown later
                     if (items.length > 6) throw new ArrayIndexOutOfBoundsException();
-                    // Convert data to Student record
                     Student student = new Student();
 
-                    //SchoolYr,Campus,StudentID,EntryDate,GradeLevel,Name
                     student.setSchoolYear(Integer.valueOf(items[0]));
                     student.setCampus(Integer.valueOf(items[1]));
                     student.setStudentId(Long.valueOf(items[2]));
@@ -54,11 +50,9 @@ public class DataLoader {
                     student.setName(items[5]);
                     result.add(student);
                 } catch (Exception e) {
-                    // Caught errors indicate a problem with data format -> Print warning and continue
-                    System.out.println("Invalid line: " + line);
+                    System.out.println("Invalid Record Found: " + line);
                 }
             }
-            System.out.println("Student List" + result);
             return result;
         } finally {
             br.close();

@@ -13,6 +13,8 @@ import java.sql.Date;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -30,13 +32,7 @@ public class StudentService implements IService {
     @Override
     public List<Student> findAll() {
         List<Student> result = repository.findAll();
-        System.out.println("The Search Result is" + result);
         return result;
-    }
-
-    @Override
-    public List<Student> search() {
-        return null;
     }
 
     public Student addNewStudent(Student newStudent) {
@@ -49,29 +45,37 @@ public class StudentService implements IService {
     }
 
     public List<Student> findBySearchCriteria(Student searchCriteria) {
-        // Minimizing the database hit
+        // Goal is to return Union of various search result based on criteria
         List<Student> result = findAll();
-        if (null == searchCriteria) {
+        if (searchCriteria.getName() == null
+                && searchCriteria.getCampus() == null
+                && searchCriteria.getGradeLevel() == null
+                && searchCriteria.getSchoolYear() == null)
             return result;
-        }
+
+        HashMap<Long, Student> studentHashMap = new HashMap<>();
+        System.out.println("search Criteria" + searchCriteria);
         if (searchCriteria.getName() != null && !searchCriteria.getName().isEmpty()) {
-            result = repository.findByNameContainingIgnoreCase(searchCriteria.getName());
-            //result = result.stream().filter(a -> a.getName().toLowerCase().equals(searchCriteria.getName())).collect(Collectors.toList());
-            System.out.println("inside name" + result);
+            repository
+                    .findByNameContainingIgnoreCase(searchCriteria.getName())
+                    .forEach(s -> studentHashMap.put(s.getStudentId(), s));
+
         } else if (searchCriteria.getCampus() != null) {
-            result = result.stream().filter(a -> a.getCampus().equals(searchCriteria.getCampus())).collect(Collectors.toList());
-            System.out.println("inside campus" + result);
+            result.stream()
+                    .filter(a -> a.getCampus().equals(searchCriteria.getCampus()))
+                    .forEach(s -> studentHashMap.put(s.getStudentId(), s));
 
         } else if (searchCriteria.getGradeLevel() != null) {
-            result = result.stream().filter(a -> a.getGradeLevel().equals(searchCriteria.getGradeLevel())).collect(Collectors.toList());
-            System.out.println("inside gradeLevel" + result);
+            result.stream()
+                    .filter(a -> a.getGradeLevel().equals(searchCriteria.getGradeLevel()))
+                    .forEach(s -> studentHashMap.put(s.getStudentId(), s));
 
         } else if (searchCriteria.getSchoolYear() != null) {
-            result = result.stream().filter(a -> a.getSchoolYear().equals(searchCriteria.getSchoolYear())).collect(Collectors.toList());
-            System.out.println("inside Year" + result);
-
+            result.stream()
+                    .filter(a -> a.getSchoolYear().equals(searchCriteria.getSchoolYear()))
+                    .forEach(s -> studentHashMap.put(s.getStudentId(), s));
         }
-        return result;
+        return new ArrayList<Student>(studentHashMap.values());
     }
 
     private List<Student> priorityBasedSearch(Student searchCriteria) {
@@ -88,25 +92,18 @@ public class StudentService implements IService {
         return result;
     }
 
-    public Student update(Student newStudent,Long id) {
-
-        if (newStudent.getStudentId() != null) {
+    public Student saveOrUpdate(Student newStudent, Long id) {
+        if (null != id) {
             Student student = repository.getOne(id);
-            if (null != student) {
-                student.setStudentId(id);
+            if (student != null) {
                 student.setSchoolYear(newStudent.getSchoolYear());
                 student.setCampus(newStudent.getCampus());
-                student.setStudentId(newStudent.getStudentId());
                 student.setEntryDate(newStudent.getEntryDate());
                 student.setGradeLevel(newStudent.getGradeLevel());
                 student.setName(newStudent.getName());
                 return repository.save(student);
             }
         }
-        return repository.save(newStudent);
-    }
-    public Student save(Student newStudent)
-    {
         return repository.save(newStudent);
     }
 
@@ -116,8 +113,6 @@ public class StudentService implements IService {
 
     public void loadInitialDataFromFile(String fileName) {
         try {
-            repository.save(new Student(2010, 999, toSqlDate("02/12/1993"), 10, "Rabin Shrestha"));
-            repository.save(new Student(2010, 888, toSqlDate("02/12/1993"), 10, "Alina Shrestha"));
             List<Student> students = dataLoader.loadStudentRecords(fileName);
             students.stream().peek(s -> System.out.println("saving" + s)).forEach(s -> repository.save(s));
         } catch (Exception ex) {
@@ -129,5 +124,4 @@ public class StudentService implements IService {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
         return Date.valueOf(LocalDate.parse(rawDate, formatter));
     }
-
 }
